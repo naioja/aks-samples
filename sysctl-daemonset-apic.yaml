@@ -1,0 +1,42 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: sysctl-daemonset
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      job: sysctl-daemonset
+  template:
+    metadata:
+      labels:
+        job: sysctl-daemonset
+    spec:
+      hostPID: true
+      restartPolicy: Always
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - image: "busybox:latest"
+        imagePullPolicy: IfNotPresent 
+        name: sysctl-daemonset
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            cpu: "10m"
+            memory: "8Mi"
+          requests:
+            cpu: "10m"
+            memory: "8Mi"
+        command:
+        - "/bin/sh"
+        - "-c"
+        - |
+          set -o errexit
+          set -o xtrace
+          while sysctl -w vm.max_map_count=262144
+          do
+            sleep 60s
+          done
