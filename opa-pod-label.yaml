@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: label
+  labels:
+   app: gatekeeper
+spec:
+  containers:
+    - name: pause
+      image: k8s.gcr.io/pause
