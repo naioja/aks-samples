@@ -1,0 +1,92 @@
+---
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"allowVolumeExpansion":true,"apiVersion":"storage.k8s.io/v1beta1","kind":"StorageClass","metadata":{"annotations":{},"labels":{"kubernetes.io/cluster-service":"true"},"name":"managed-premium"},"parameters":{"cachingmode":"ReadOnly","kind":"Managed","storageaccounttype":"Premium_LRS"},"provisioner":"kubernetes.io/azure-disk"}
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: managed-premium-zone-aware
+parameters:
+  cachingmode: ReadOnly
+  kind: Managed
+  storageaccounttype: Premium_LRS
+provisioner: kubernetes.io/azure-disk
+reclaimPolicy: Retain
+#reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+#volumeBindingMode: Immediate
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: zoned-storage-demo
+    labels:
+      purpose: zoned-storage-demo
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-zone2
+  namespace: zoned-storage-demo
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: managed-premium-zone-aware
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-zone3
+  namespace: zoned-storage-demo
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: managed-premium-zone-aware
+  resources:
+    requests:
+      storage: 10Gi
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: testpvcs-zone2
+  namespace: zoned-storage-demo
+spec:
+  containers:
+  - name: testpvcs
+    image: nginx:latest
+    volumeMounts:
+    - mountPath: "/mnt/shared"
+      name: pvc-zone2
+  volumes:
+    - name: pvc-zone2
+      persistentVolumeClaim:
+        claimName: pvc-zone2
+  nodeSelector:
+    failure-domain.beta.kubernetes.io/zone: westeurope-2
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: testpvcs-zone3
+  namespace: zoned-storage-demo
+spec:
+  containers:
+  - name: testpvcs
+    image: nginx:latest
+    volumeMounts:
+    - mountPath: "/mnt/shared"
+      name: pvc-zone3
+  volumes:
+    - name: pvc-zone3
+      persistentVolumeClaim:
+        claimName: pvc-zone3
+  nodeSelector:
+    failure-domain.beta.kubernetes.io/zone: westeurope-3
+

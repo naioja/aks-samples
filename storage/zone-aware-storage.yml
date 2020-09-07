@@ -1,0 +1,141 @@
+---
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"allowVolumeExpansion":true,"apiVersion":"storage.k8s.io/v1beta1","kind":"StorageClass","metadata":{"annotations":{},"labels":{"kubernetes.io/cluster-service":"true"},"name":"managed-premium"},"parameters":{"cachingmode":"ReadOnly","kind":"Managed","storageaccounttype":"Premium_LRS"},"provisioner":"kubernetes.io/azure-disk"}
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: managed-premium-zone-aware-z2
+parameters:
+  cachingmode: ReadOnly
+  kind: Managed
+  storageaccounttype: Premium_LRS
+provisioner: kubernetes.io/azure-disk
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: failure-domain.beta.kubernetes.io/zone
+    values:
+    - westeurope-2
+---
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"allowVolumeExpansion":true,"apiVersion":"storage.k8s.io/v1beta1","kind":"StorageClass","metadata":{"annotations":{},"labels":{"kubernetes.io/cluster-service":"true"},"name":"managed-premium"},"parameters":{"cachingmode":"ReadOnly","kind":"Managed","storageaccounttype":"Premium_LRS"},"provisioner":"kubernetes.io/azure-disk"}
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: managed-premium-zone-aware-z3
+parameters:
+  cachingmode: ReadOnly
+  kind: Managed
+  storageaccounttype: Premium_LRS
+provisioner: kubernetes.io/azure-disk
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: failure-domain.beta.kubernetes.io/zone
+    values:
+    - westeurope-3
+---
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"allowVolumeExpansion":true,"apiVersion":"storage.k8s.io/v1beta1","kind":"StorageClass","metadata":{"annotations":{},"labels":{"kubernetes.io/cluster-service":"true"},"name":"managed-premium"},"parameters":{"cachingmode":"ReadOnly","kind":"Managed","storageaccounttype":"Premium_LRS"},"provisioner":"kubernetes.io/azure-disk"}
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: managed-premium-zone-aware-z1
+parameters:
+  cachingmode: ReadOnly
+  kind: Managed
+  storageaccounttype: Premium_LRS
+provisioner: kubernetes.io/azure-disk
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: failure-domain.beta.kubernetes.io/zone
+    values:
+    - westeurope-1
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: zoned-storage-demo
+    labels:
+      purpose: zoned-storage-demo
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-aware-zone2
+  namespace: zoned-storage-demo
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: managed-premium-zone-aware-z2
+  resources:
+    requests:
+      storage: 10Gi
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: testpvcs-aware-zone2
+  namespace: zoned-storage-demo
+spec:
+  containers:
+  - name: testpvcs
+    image: nginx:latest
+    volumeMounts:
+    - mountPath: "/mnt/shared"
+      name: pvc-aware-zone2
+  volumes:
+    - name: pvc-aware-zone2
+      persistentVolumeClaim:
+        claimName: pvc-aware-zone2
+  nodeSelector:
+    failure-domain.beta.kubernetes.io/zone: westeurope-2
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-aware-zone3
+  namespace: zoned-storage-demo
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: managed-premium-zone-aware-z3
+  resources:
+    requests:
+      storage: 10Gi
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: testpvcs-aware-zone3
+  namespace: zoned-storage-demo
+spec:
+  containers:
+  - name: testpvcs
+    image: nginx:latest
+    volumeMounts:
+    - mountPath: "/mnt/shared"
+      name: pvc-aware-zone3
+  volumes:
+    - name: pvc-aware-zone3
+      persistentVolumeClaim:
+        claimName: pvc-aware-zone3
+  nodeSelector:
+    failure-domain.beta.kubernetes.io/zone: westeurope-3
+
