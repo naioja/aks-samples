@@ -152,7 +152,7 @@ cat << EOF > cloud-init.txt
 #cloud-config
 package_upgrade: true
 packages:
-  -  nload
+  -  nload 
   - iptables-persistent
 EOF
 
@@ -255,13 +255,22 @@ az vm create \
     --ssh-key-values $TEST_VM_SSH \
     --image UbuntuLTS
 
+az network nic ip-config update -g $RG_NAME --nic-name ${TEST_VM_NAME}-Nic1 \
+    -n ipconfig1 --make-primary
+
+az network nic ip-config update \
+  --name ipconfig1 \
+  --nic-name ${TEST_VM_NAME}-Nic1 \
+  --resource-group $RG_NAME \
+  --public-ip-address $TEST_VM_PUBLIC_IP_NAME
+
 TEST_VM_SSH_IP=$(az network public-ip show --resource-group $RG_NAME --name $TEST_VM_PUBLIC_IP_NAME --query ipAddress -o tsv)
 export ANSIBLE_HOST_KEY_CHECKING="False"
 ansible all -i "$TEST_VM_SSH_IP," -m ping -u admn
 ansible all -i "$TEST_VM_SSH_IP," -m shell -b -u admn -a 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"'
 ansible all -i "$TEST_VM_SSH_IP," -m shell -b -u admn -a 'mv kubectl /bin/kubectl ; chmod +x /bin/kubectl'
 ansible all -i "$TEST_VM_SSH_IP," -m shell -b -u admn -a 'curl -sL https://aka.ms/InstallAzureCLIDeb | bash'
-##### Login to your VM
+##### Login from the vm user account to your azure subscription
 ansible all -i "$TEST_VM_SSH_IP," -m shell -u admn -a "az aks get-credentials -n $AKS_NAME -g $RG_NAME --admin"
 ansible all -i "$TEST_VM_SSH_IP," -m shell -u admn -a "/bin/kubectl get nodes"
 
