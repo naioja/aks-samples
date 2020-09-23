@@ -255,7 +255,7 @@ az vm create \
     --ssh-key-values $TEST_VM_SSH \
     --image UbuntuLTS
 
-TEST_VM_SSH_IP=$(az network public-ip show --resource-group $RG_NAME --name $PUBLIC_IP_NAME --query ipAddress -o tsv)
+TEST_VM_SSH_IP=$(az network public-ip show --resource-group $RG_NAME --name $TEST_VM_PUBLIC_IP_NAME --query ipAddress -o tsv)
 export ANSIBLE_HOST_KEY_CHECKING="False"
 ansible all -i "$TEST_VM_SSH_IP," -m ping -u admn
 ansible all -i "$TEST_VM_SSH_IP," -m shell -b -u admn -a 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"'
